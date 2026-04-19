@@ -1,5 +1,7 @@
 <script lang="ts">
   import { flip } from 'svelte/animate';
+  import { saveToFile, loadFromFile} from './storage';
+
   type Bereich = 
     "Pflichtbereich" |
     "Studium Generale" |
@@ -92,6 +94,19 @@
 
   function handleDragOver(e: DragEvent) {
     e.preventDefault();
+  }
+
+  function handleSave() {
+    saveToFile(allModuls);
+  }
+
+  async function handleLoad() {
+    try {
+      const loaded = await loadFromFile();
+      allModuls = loaded;
+    } catch(err) {
+      alert(err);
+    }
   }
 
 
@@ -212,10 +227,34 @@
     color: #3b82f6;
   }
 
-  .add-btn {
+  .btns {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-left: 20px;
     margin-top: 20px;
     margin-bottom: 10px;
+    margin-right: 20px;
+  }
+
+  .text-btn{
+    background: transparent;
+    color: #94a3b8;
+    border: 1px solid #334155;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+
+  .text-btn:hover {
+    color: white;
+    border-color: #475569;
+    background: #1e293b;
+  }
+
+  .add-btn {
+    
     background: #3b82f6;
     color: white;
     border: none;
@@ -282,15 +321,23 @@
 </style>
 
 <main>
-  <header class="add-bar">
-    <button class="add-btn" on:click={() => showPopup = true}>+ Modul hinzufügen </button>
+  <header class="top-bar">
+    <div class="btns">
+      <button class="add-btn" on:click={() => showPopup = true}>+ Modul hinzufügen </button>
+      <div class="save-btns">
+        <button class="text-btn" on:click={handleLoad}>Laden</button>
+        <button class="text-btn" on:click={handleSave}>Speichern</button>
+      </div>
+      
+    </div>
+    
     {#if showPopup}
       <div 
         class="popup-overlay" 
         role="button" tabindex="0" 
         aria-label="Popup schließen" 
         on:keydown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === 'Enter') {
             showPopup = false;
             }
           }}
