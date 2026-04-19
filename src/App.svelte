@@ -37,6 +37,9 @@
   let newBereich: Bereich = bereicheList[0];
   let newSemester = 1;
 
+  let draggedModul: Modul | null = null;
+  let hoveredSemester: number | null = null;
+
   $: gewerteteModule = allModuls.filter(m => m.semester > 0);
   $: gesamtCP = gewerteteModule.reduce((sum, m) => sum + m.cp, 0)
 
@@ -73,6 +76,22 @@
 
   function getSummPerBereich(ber: Bereich): number {
     return gewerteteModule.filter(m => m.bereich === ber).reduce((sum,m) => sum + m.cp, 0)
+  }
+
+  function handleDragStart(modul: Modul) {
+    draggedModul = modul;
+  }
+
+  function handleDrop(targetSemester: number) {
+    if(draggedModul) {
+      draggedModul.semester = targetSemester;
+      allModuls = [...allModuls];
+      draggedModul = null;
+    }
+  }
+
+  function handleDragOver(e: DragEvent) {
+    e.preventDefault();
   }
 
 
@@ -124,7 +143,7 @@
     min-width: 56px;
     padding: 10px;
     font-size: 0.8rem;
-    border: 1px solid #334155
+    border: 1px solid #334155;
   }
 
   .column h2 {
@@ -135,6 +154,21 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .column.drag-over {
+    background-color: #334155;
+    border: 1px dashed #3b82f6;
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+  }
+
+  .card {
+    cursor: grab;
+  }
+
+  .card:active {
+    cursor: grabbing;
   }
 
   .sem-sum {
@@ -309,7 +343,18 @@
   </header>
   <div class="board">
     {#each semesterList as sem}
-      <div class="column" class:is-placeholder={sem === 0}>
+      <div 
+        class="column"
+        class:is-placeholder={sem === 0}
+        class:drag-over={hoveredSemester === sem}
+
+        role="list"
+        aria-label="{sem === 0 ? 'Platzhalter' : sem + '. Semester'}"
+        on:drop={() => {handleDrop(sem); hoveredSemester = null;}}
+        on:dragleave={() => hoveredSemester = null}
+        on:dragenter={() => hoveredSemester = sem}
+        on:dragover={handleDragOver}
+      >
         <div class="column-header">
           <h2>{sem === 0 ? "Platzhalter" : `${sem}. Semester`}</h2>
           <span class="sem-sum">
@@ -325,7 +370,13 @@
                 <span class="divider-text"> {ber} </span>
                 <hr />
                 {#each modulImBereich as modul (modul.id)}
-                  <div class="card" animate:flip>
+                  <div 
+                    class="card" 
+                    animate:flip
+                    draggable="true"
+                    role="listitem"
+                    on:dragstart={() => handleDragStart(modul)}
+                  >
                     <div class="card-main">
                       <strong> {modul.name} </strong>
                       <code class="id-badge"> {modul.modulID} </code>
