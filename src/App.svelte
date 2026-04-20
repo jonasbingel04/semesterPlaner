@@ -6,15 +6,15 @@
     "Pflichtbereich" |
     "Studium Generale" |
     "Abschlussbereich/Thesis" |
-    "Wahlfplichtbereich" |
-    "Infromatik-Wahlbereich" |
+    "Wahlpflichtbereich" |
+    "Informatik-Wahlbereich" |
     "Studienbegeleitende Leistung"
   
   type CPRange = number | {min: number; max: number};
 
   const bereicheList : Bereich[] = [
-    "Pflichtbereich", "Studium Generale", "Wahlfplichtbereich",
-    "Infromatik-Wahlbereich", "Studienbegeleitende Leistung", "Abschlussbereich/Thesis"
+    "Pflichtbereich", "Studium Generale", "Wahlpflichtbereich",
+    "Informatik-Wahlbereich", "Studienbegeleitende Leistung", "Abschlussbereich/Thesis"
   ];
 
   const semesterList = [0,1,2,3,4,5,6];
@@ -23,8 +23,8 @@
     "Pflichtbereich": 114,
     "Studium Generale": {min: 5, max: 6},
     "Abschlussbereich/Thesis": 12,
-    "Wahlfplichtbereich": {min: 10, max: 35},
-    "Infromatik-Wahlbereich": {min: 5, max: 30},
+    "Wahlpflichtbereich": {min: 10, max: 35},
+    "Informatik-Wahlbereich": {min: 5, max: 30},
     "Studienbegeleitende Leistung": {min: 9, max: 18}
 
   }
@@ -43,6 +43,10 @@
   let hoveredSemester: number | null = null;
 
   $: gewerteteModule = allModuls.filter(m => m.semester > 0);
+  $: sumPerBereich = bereicheList.reduce((acc, ber) => {
+    acc[ber] = gewerteteModule.filter(m => m.bereich === ber).reduce((sum, m) => sum + m.cp, 0);
+    return acc;
+  }, {} as Record<Bereich, number>);
   $: gesamtCP = gewerteteModule.reduce((sum, m) => sum + m.cp, 0)
 
   interface Modul {
@@ -76,18 +80,17 @@
     }
   }
 
-  function getSummPerBereich(ber: Bereich): number {
-    return gewerteteModule.filter(m => m.bereich === ber).reduce((sum,m) => sum + m.cp, 0)
-  }
-
   function handleDragStart(modul: Modul) {
     draggedModul = modul;
   }
 
   function handleDrop(targetSemester: number) {
     if(draggedModul) {
-      draggedModul.semester = targetSemester;
-      allModuls = [...allModuls];
+      allModuls = allModuls.map(m =>
+        m.id === draggedModul!.id
+        ? { ...m, semester: targetSemester}
+        : m
+      );
       draggedModul = null;
     }
   }
@@ -449,7 +452,7 @@
           <span class="stat-label"> {ber}: </span>
           <br>
           <span class="stat-value"> 
-            {getSummPerBereich(ber)} /
+            {sumPerBereich[ber]} /
             {#if typeof sollCP[ber] === 'number'}
               {sollCP[ber]}
             {:else}
