@@ -66,8 +66,8 @@
   }
 
   function addModul() {
-    if(newName && newModulID) {
-      const m = createModul(newName, newModulID, newCP, newBereich, newSemester);
+    if(newName) {
+      const m = createModul(newName, newModulID, Number(newCP), newBereich, newSemester);
       allModuls = [...allModuls, m];
 
       newName = "";
@@ -180,10 +180,13 @@
 
   .card {
     cursor: grab;
+    transition: transform 0.2s;
+    user-select: none;
   }
 
   .card:active {
     cursor: grabbing;
+    transform: scale(0.95);
   }
 
   .sem-sum {
